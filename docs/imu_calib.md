@@ -2,11 +2,11 @@
 
 ## Verwendeter IMU Sensor
 
-<img src="../asstes/adma_slim.jpeg" alt="ADMA Slim">
+<img src="assets/adma_slim.jpeg" width="250" height="250">
 
 ## Unterschiedliche Koordinatensysteme
 
-<img src="../asstes/coordinate_systems.png" alt="Koordinatensysteme">
+<img src="asstes/coordinate_systems.png" width="500" height="250">
 
 
 
