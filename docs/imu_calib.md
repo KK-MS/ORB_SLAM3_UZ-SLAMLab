@@ -29,7 +29,11 @@ IMU.T_b_c1: !!opencv-matrix
 
 ### IMU Rauschparameter
 
-Folgende Parameter sind aus dem Datenblatt der ADMA zu entnehmen oder können durch das Kalibr Tool berechnet werden:
+Folgende Parameter sind aus dem Datenblatt der ADMA zu entnehmen:
+
+<img src="../assets/noise_adma_slim.PNG" width="250" height="250">
+
+Oder können durch das Kalibr Tool berechnet werden:
 
 ```
 IMU.NoiseGyro: 1.7e-4 #1.6968e-04
