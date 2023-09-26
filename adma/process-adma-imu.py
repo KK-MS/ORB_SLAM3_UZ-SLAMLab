@@ -95,7 +95,41 @@ class ADMA_Processor:
         print(int((video.get(cv2.CAP_PROP_POS_MSEC)) * 1e6))
         print(new_ts)
         print("===============")
+      else:
+        print("No of ts: " + str(len(frame_ts)))
+        break
     return frame_ts
+  
+  def find_nearest_ts(self,ts_high_freq, K):
+    return ts_high_freq[min(range(len(ts_high_freq)), key = lambda i: abs(ts_high_freq[i]-K))]
+  
+  def save_frame_by_frame(self, filepath, timestamps):
+    cap = cv2.VideoCapture(filepath)
+    basepath = "./data/mav0/cam0/data/"
+    counter = 0
+    while(True):
+        if cap.isOpened():
+          ret,frame = cap.read()
+          filename = str(timestamps[counter]) + ".png"
+          imagePath = basepath + filename
+          print(counter)
+          counter = counter + 1
+          if (ret == True):
+            cv2.imwrite(imagePath, frame)
+            if cv2.waitKey(10) & 0xFF == ord('q'):
+              break
+          else:
+            print("Frame is empty!\n")
+            break
+    cap.release()
+    return True
+  
+  def write_ts_to_file(self, timestamps, filename):
+     file_path = "./data/mav0/" + str(filename) + ".txt"
+     f = open(file_path, "w")
+     for ts in timestamps:
+        f.write(str(ts)+"\n")
+     f.close()
 
 
      
@@ -125,14 +159,34 @@ def main():
     for counter, indices in enumerate(output[item]):
       print(indices)
       if(counter > 0):
-        ts_new.append(timestamps[indices] + (1e9 / adma.IMU_FREQ * (counter)) )
+        ts_new.append(int(timestamps[indices] + (1e9 / adma.IMU_FREQ * (counter))))
       else:
-        ts_new.append(timestamps[indices])
+        ts_new.append(int(timestamps[indices]))
 
   for i in ts_new:
     print(int(i))
 
+  print("Get video frame timestamps\n")
   frame_ts = adma.get_video_ts(ts_new)
+  print("Done!\n")
+
+  print("Find the nearest ts\n")
+  new_frame_ts = []
+  for counter, ts in enumerate(frame_ts):
+      nearest = adma.find_nearest_ts(ts_new, ts)
+      print("TS: " + str(ts))
+      print("NEAREST: " + str(nearest))
+      for count, ts_high in enumerate(ts_new):
+         if ts_high == nearest:
+            print("TS_HIGH: " + str(ts_high))
+            new_frame_ts.append(int(ts_high))
+  print("Done\n")
+  print("Save frame by frame\n")
+  adma.save_frame_by_frame(adma.video_file, new_frame_ts)
+  print("Done\n")
+  print("Save timestamps in timestamps.txt\n")
+  adma.write_ts_to_file(new_frame_ts,"timestamps")
+  adma.write_ts_to_file(ts_new, "imu_timestamps")
       
 
   with open('data/mav0/imu0/data.csv', 'w', newline='') as file:
