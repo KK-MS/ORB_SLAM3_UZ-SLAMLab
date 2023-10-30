@@ -17,18 +17,18 @@ class ADMA_Processor:
   G = 9.81
   rate_factor = (np.pi/180)
   IMU_FREQ = 100
-  data_dir = None
+  data_file = None
   video_file = None
+  rootdir = None
 
   def __init__(self, args):
-    self.data_dir = args[1]
+    self.data_file = args[1]
     self.video_file = args[2]
+    self.rootdir = args[3]
      
   def get_mat_data(self):
-     for file in os.listdir(self.data_dir):
-      if(file.endswith('.mat')):
-        print("Reading file...")
-        data_dict = mat73.loadmat(self.data_dir + file)
+     print("Reading file...")
+     data_dict = mat73.loadmat(self.data_file)
      return data_dict
   
   def gen_timestamps(self, dict):
@@ -105,7 +105,7 @@ class ADMA_Processor:
   
   def save_frame_by_frame(self, filepath, timestamps):
     cap = cv2.VideoCapture(filepath)
-    basepath = "./data/mav0/cam0/data/"
+    basepath = "./" + str(self.rootdir) + "/mav0/cam0/data/"
     counter = 0
     while(True):
         if cap.isOpened():
@@ -125,7 +125,7 @@ class ADMA_Processor:
     return True
   
   def write_ts_to_file(self, timestamps, filename):
-     file_path = "./data/mav0/" + str(filename) + ".txt"
+     file_path = "./" + str(self.rootdir) + "/mav0/" + str(filename) + ".txt"
      f = open(file_path, "w")
      for ts in timestamps:
         f.write(str(ts)+"\n")
@@ -135,16 +135,15 @@ class ADMA_Processor:
      
   
 def main():
-  rootdir = "./data"
-  if not os.path.exists(rootdir):
-    os.makedirs(rootdir)
-    os.makedirs(rootdir + "/mav0")
-    os.makedirs(rootdir + "/mav0/cam0")
-    os.makedirs(rootdir + "/mav0/cam0/data")
-    os.makedirs(rootdir + "/mav0/imu0")
-
 
   adma = ADMA_Processor(sys.argv)
+
+  if not os.path.exists(adma.rootdir):
+    os.makedirs(adma.rootdir)
+    os.makedirs(adma.rootdir + "/mav0")
+    os.makedirs(adma.rootdir + "/mav0/cam0")
+    os.makedirs(adma.rootdir + "/mav0/cam0/data")
+    os.makedirs(adma.rootdir + "/mav0/imu0")
 
   dict = adma.get_mat_data()
 
@@ -189,7 +188,7 @@ def main():
   adma.write_ts_to_file(ts_new, "imu_timestamps")
       
 
-  with open('data/mav0/imu0/data.csv', 'w', newline='') as file:
+  with open(str(adma.rootdir) + '/mav0/imu0/data.csv', 'w', newline='') as file:
     writer = csv.writer(file)
     field = ["#timestamp [ns]","w_RS_S_x [rad s^-1]","w_RS_S_y [rad s^-1]","w_RS_S_z [rad s^-1]","a_RS_S_x [m s^-2]","a_RS_S_y [m s^-2]","a_RS_S_z [m s^-2]"]
     writer.writerow(field)
