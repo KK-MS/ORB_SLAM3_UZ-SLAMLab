@@ -6,17 +6,17 @@
 Camera.type: "PinHole"
 # Camera calibration and distortion parameters (OpenICC https://github.com/urbste/OpenImuCameraCalibrator) 
 
-Camera.fx: 922.7103328176213 #293.3641909539405 #457.408 # 228,704
-Camera.fy: 923.9565905268729 #457.408 # 190.9733070521226
-Camera.cx: 979.0444024535001 #481.061 # 254.93170605935475
-Camera.cy: 564.0948172990663  #272.316 # 256.8974428996504
+Camera.fx: 797.890542775051 #293.3641909539405 #457.408 # 228,704
+Camera.fy: 726.2039431301363 #457.408 # 190.9733070521226
+Camera.cx: 954.6890151594616 #481.061 # 254.93170605935475
+Camera.cy: 579.2836474103652  #272.316 # 256.8974428996504
 
-Camera.k1: 0.06757872
-Camera.k2: -0.04414495
-Camera.p1: 0.00816357
-Camera.p2: 0.00506466
-Camera.k3: 0.00792505
-
+Camera.k1: -0.19002438
+Camera.k2: 0.05248954
+Camera.p1: -0.01138949
+Camera.p2: -0.00149443
+Camera.k3: -0.00706324
+     
 # Camera.k1: 0.0 # -0.27275757739490136 # 0.0034823894022493434
 # Camera.k2: 0.0 #0.11929003773491846 # 0.0007150348452162257
 # Camera.k3: 0.0 #-0.03031458977997978 # -0.0020532361418706202
@@ -53,7 +53,7 @@ Camera.height: 1080 # 540
 Camera.fps: 30
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
-#Camera.RGB: 1
+Camera.RGB: 1
 
 
 
