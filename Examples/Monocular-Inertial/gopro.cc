@@ -146,10 +146,10 @@ bool LoadTelemetry(const string &path_to_telemetry_file_acc,
     if (!file_gyro.is_open()) {
       return false;
     }
-    json j;
-    json i;
-    file_acc >> j;
-    file_gyro >> i;
+    json j = json::parse(file_acc);
+    json i = json::parse(file_gyro);
+    // file_acc >> j;
+    // file_gyro >> i;
     const auto accl = j["1"]["streams"]["ACCL"]["samples"];
     const auto gyro = i["1"]["streams"]["GYRO"]["samples"];
     //const auto gps5 = j["1"]["streams"]["GPS5"]["samples"];
