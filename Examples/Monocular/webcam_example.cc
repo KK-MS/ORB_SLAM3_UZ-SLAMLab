@@ -82,14 +82,17 @@ int main(int argc, char **argv)
 
     double t_resize = 0.f;
     double t_track = 0.f;
-
+    int count = 0;
+    int last_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
+    cout << "LAST FRAME COUNT: " << last_frame << endl;
     while (b_continue_session)
     {
         double timestamp_ms = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
         cap >> imCV;
-        if (imCV.empty()){
+        if(!imCV.empty()){
+        /*if (imCV.empty()){
             break;
-        }
+        }*/
         // cv::imshow("frame", imCV);
         // cv::waitKey(0);
         //cv::rotate(imCV, imCV, cv::ROTATE_90_CLOCKWISE);
@@ -105,6 +108,14 @@ int main(int argc, char **argv)
 
         // Pass the image to the SLAM system
         SLAM.TrackMonocular(imCV, timestamp_ms);
+        
+        // if(count >= last_frame) {
+        //     break;
+        // }
+        // else {
+        //     count++;
+        // }
+        }
     }
 
     // Stop all threads
