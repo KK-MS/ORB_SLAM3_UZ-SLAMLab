@@ -19,6 +19,16 @@ bool LoadTelemetry(const string &strImuPath,
                    vector<cv::Point3f> &vAcc,
                    vector<cv::Point3f> &vGyro);
 
+bool LoadTelemetry2(const string &strImuPath,
+                   const string &strImuPath2,
+                   vector<double> &vTimeStamps,
+                   vector<cv::Point3f> &vAcc,
+                   vector<cv::Point3f> &vGyro);
+
+bool LoadADMA(const string &path_to_telemetry_file, vector<double> &vTimeStamps,
+                   vector<cv::Point3f> &vAcc,
+                   vector<cv::Point3f> &vGyro);
+
 int main(int argc, char **argv) {
   if (argc < 5) {
     cerr << endl
@@ -29,8 +39,14 @@ int main(int argc, char **argv) {
 
   vector<double> imuTimestamps;
   vector<cv::Point3f> vAcc, vGyr;
-  LoadTelemetry(argv[4], argv[5], imuTimestamps, vAcc, vGyr);
-
+  if(argc < 6) {
+    cout << "Running with ADMA..." << endl;
+    LoadADMA(argv[4], imuTimestamps, vAcc, vGyr);
+  }
+  else {
+    cout << "Running with gopro IMU..." << endl;
+    LoadTelemetry(argv[4], argv[5], imuTimestamps, vAcc, vGyr);
+  }
   // open settings to get image resolution
   cv::FileStorage fsSettings(argv[2], cv::FileStorage::READ);
   if(!fsSettings.isOpened()) {
@@ -86,6 +102,14 @@ int main(int argc, char **argv) {
       vImuMeas.clear();
       while(imuTimestamps[last_imu_idx] <= tframe && tframe > 0)
       {
+          cout << "====================================" << endl;
+          cout <<"ACC x: " << vAcc[last_imu_idx].x << endl;
+          cout <<"ACC y: " << vAcc[last_imu_idx].y << endl;
+          cout <<"ACC z: " << vAcc[last_imu_idx].z << endl;
+          cout <<"GYRO x: " << vGyr[last_imu_idx].x << endl;
+          cout <<"GYRO y: " << vGyr[last_imu_idx].y << endl;
+          cout <<"GYRO z: " << vGyr[last_imu_idx].z << endl;
+          cout <<"TS: " << imuTimestamps[last_imu_idx] << endl;
           vImuMeas.push_back(ORB_SLAM3::IMU::Point(vAcc[last_imu_idx].x,vAcc[last_imu_idx].y,vAcc[last_imu_idx].z,
                                                    vGyr[last_imu_idx].x,vGyr[last_imu_idx].y,vGyr[last_imu_idx].z,
                                                    imuTimestamps[last_imu_idx]));
@@ -125,7 +149,10 @@ int main(int argc, char **argv) {
   cout << "mean tracking time: " << totaltime / nImages << endl;
 
   // Save camera trajectory
+  SLAM.SaveTrajectoryEuRoC("Trajectory.txt");
   SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+
+  cout << "Test for segfault" << endl;
 
   return 0;
 }
@@ -186,4 +213,100 @@ bool LoadTelemetry(const string &path_to_telemetry_file_acc,
     file_acc.close();
     file_gyro.close();
     return true;
+}
+
+bool LoadTelemetry2(const string &path_to_telemetry_file_acc,
+                   const string &path_to_telemetry_file_gyro,
+                   vector<double> &vTimeStamps,
+                   vector<cv::Point3f> &vAcc,
+                   vector<cv::Point3f> &vGyro) {
+
+    std::ifstream file_acc;
+    std::ifstream file_gyro;
+    file_acc.open(path_to_telemetry_file_acc.c_str());
+    if (!file_acc.is_open()) {
+      return false;
+    }
+    file_gyro.open(path_to_telemetry_file_gyro.c_str());
+    if (!file_gyro.is_open()) {
+      return false;
+    }
+    json j = json::parse(file_acc);
+    json i = json::parse(file_gyro);
+    // file_acc >> j;
+    // file_gyro >> i;
+    const auto accl = j["1"]["streams"]["ACCL"]["samples"];
+    const auto gyro = i["1"]["streams"]["GYRO"]["samples"];
+    //const auto gps5 = j["1"]["streams"]["GPS5"]["samples"];
+    std::map<double, cv::Point3f> sorted_acc;
+    std::map<double, cv::Point3f> sorted_gyr;
+
+    for (const auto &e : accl) {
+      cv::Point3f v((float)e["value"][1], ((float)e["value"][0]*(-1)), (float)e["value"][2]);
+      sorted_acc.insert(std::make_pair((double)e["cts"] * MS_TO_S, v));
+    }
+    for (const auto &e : gyro) {
+      cv::Point3f v((float)e["value"][1], ((float)e["value"][0]*(-1)), (float)e["value"][2]);
+      sorted_gyr.insert(std::make_pair((double)e["cts"] * MS_TO_S, v));
+    }
+//    for (const auto &e : gps5) {
+//      Eigen::Vector3d v;
+//      Eigen::Vector2d vel2d_vel3d;
+//      v << e["value"][0], e["value"][1], e["value"][2];
+//      vel2d_vel3d << e["value"][3], e["value"][4];
+//      telemetry.gps.lle.emplace_back(v);
+//      telemetry.gps.timestamp_ms.emplace_back(e["cts"]);
+//      telemetry.gps.precision.emplace_back(e["precision"]);
+//      telemetry.gps.vel2d_vel3d.emplace_back(vel2d_vel3d);
+//    }
+
+    double imu_start_t = sorted_acc.begin()->first;
+    for (auto acc : sorted_acc) {
+        vTimeStamps.push_back(acc.first-imu_start_t);
+        vAcc.push_back(acc.second);
+    }
+    for (auto gyr : sorted_gyr) {
+        vGyro.push_back(gyr.second);
+    }
+    file_acc.close();
+    file_gyro.close();
+    return true;
+}
+
+bool LoadADMA(const string &path_to_telemetry_file, vector<double> &vTimeStamps,
+                   vector<cv::Point3f> &vAcc,
+                   vector<cv::Point3f> &vGyro) {
+
+    std::ifstream file;
+    file.open(path_to_telemetry_file.c_str());
+    if (!file.is_open()) {
+      return false;
+    }
+
+    json j = json::parse(file);
+
+    std::map<double, cv::Point3f> sorted_acc;
+    std::map<double, cv::Point3f> sorted_gyr;
+
+    for (const auto &e : j) {
+      cv::Point3f v((float)e["acc_x"], (float)e["acc_y"], (float)e["acc_z"]);
+      sorted_acc.insert(std::make_pair((double)e["ts"], v));
+    }
+    for (const auto &e : j) {
+      cv::Point3f v((float)e["gyro_x"], (float)e["gyro_y"], (float)e["gyro_z"]);
+      sorted_gyr.insert(std::make_pair((double)e["ts"], v));
+    }
+
+    double imu_start_t = sorted_acc.begin()->first;
+    for (auto acc : sorted_acc) {
+        vTimeStamps.push_back(acc.first-imu_start_t);
+        vAcc.push_back(acc.second);
+    }
+    for (auto gyr : sorted_gyr) {
+        vGyro.push_back(gyr.second);
+    }
+    
+    file.close();
+
+
 }

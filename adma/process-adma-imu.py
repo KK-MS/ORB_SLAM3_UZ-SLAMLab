@@ -9,6 +9,7 @@ import os
 import time
 import mat73
 import pytz
+import json
 
 
 
@@ -31,16 +32,27 @@ class ADMA_Processor:
      data_dict = mat73.loadmat(self.data_file)
      return data_dict
   
+  def gen_cts(self, dict):
+    times_ms = dict['INS_Time_msec']
+    init_ts = times_ms[0]
+    cts = []
+    for i in range(len(times_ms)):
+      cts.append(times_ms[i] - init_ts)
+    
+    return cts
+
+
+  
   def gen_timestamps(self, dict):
      timestamps_ns = []
-     time_week = dict['GNSS_Time_Week'][1]
-     time_ms = dict['GNSS_Time_msec'][1]
+     time_week = dict['INS_Time_Week'][1]
+     time_ms = dict['INS_Time_msec'][1]
      leap_seconds = 18
 
-     for i in range(len(dict['GNSS_Time_Week'])):
+     for i in range(len(dict['INS_Time_Week'])):
       if(i > 0):
-        time_week = dict['GNSS_Time_Week'][i]
-        time_ms = dict['GNSS_Time_msec'][i]
+        time_week = dict['INS_Time_Week'][i]
+        time_ms = dict['INS_Time_msec'][i]
         gps_epoch = datetime(1980, 1, 6, tzinfo=pytz.utc)
         unix_ts = (gps_epoch + timedelta(weeks=time_week, milliseconds=time_ms, seconds=-leap_seconds)).timestamp()
         unix_ts = unix_ts * 1e9
@@ -53,7 +65,7 @@ class ADMA_Processor:
     rate_body_y = []
     rate_body_z = []
 
-    for i in range(len(dict['GNSS_Time_Week'])):
+    for i in range(len(dict['INS_Time_Week'])):
       if(i > 0):
         rate_body_x.append(dict['Rate_Body_X'][i] * self.rate_factor)
         rate_body_y.append(dict['Rate_Body_Y'][i] * self.rate_factor)
@@ -66,7 +78,7 @@ class ADMA_Processor:
     acc_body_y = []
     acc_body_z = []
 
-    for i in range(len(dict['GNSS_Time_Week'])):
+    for i in range(len(dict['INS_Time_Week'])):
       if(i > 0):
         acc_body_x.append(dict['Acc_Body_X'][i] * self.G)
         acc_body_y.append(dict['Acc_Body_Y'][i] * self.G)
@@ -136,6 +148,8 @@ class ADMA_Processor:
   
 def main():
 
+  INTERPOLATION = 0
+
   adma = ADMA_Processor(sys.argv)
 
   if not os.path.exists(adma.rootdir):
@@ -151,41 +165,45 @@ def main():
   rate_body_x, rate_body_y, rate_body_z = adma.get_rate_body(dict)
   acc_body_x, acc_body_y, acc_body_z = adma.get_acc_body(dict)
 
-  ts_new = []
-  output = adma.get_duplicate_ts(timestamps)
-  for item in output:
-    length = len(output[item])
-    for counter, indices in enumerate(output[item]):
-      print(indices)
-      if(counter > 0):
-        ts_new.append(int(timestamps[indices] + (1e9 / adma.IMU_FREQ * (counter))))
-      else:
-        ts_new.append(int(timestamps[indices]))
+  cts = adma.gen_cts(dict)
 
-  for i in ts_new:
-    print(int(i))
+  if(INTERPOLATION == 1):
+    ts_new = []
+    output = adma.get_duplicate_ts(timestamps)
+    for item in output:
+      length = len(output[item])
+      for counter, indices in enumerate(output[item]):
+        print(indices)
+        if(counter > 0):
+          ts_new.append(int(timestamps[indices] + (1e9 / adma.IMU_FREQ * (counter))))
+        else:
+          ts_new.append(int(timestamps[indices]))
 
-  print("Get video frame timestamps\n")
-  frame_ts = adma.get_video_ts(ts_new)
-  print("Done!\n")
+    for i in ts_new:
+      print(int(i))
 
-  print("Find the nearest ts\n")
-  new_frame_ts = []
-  for counter, ts in enumerate(frame_ts):
-      nearest = adma.find_nearest_ts(ts_new, ts)
-      print("TS: " + str(ts))
-      print("NEAREST: " + str(nearest))
-      for count, ts_high in enumerate(ts_new):
-         if ts_high == nearest:
-            print("TS_HIGH: " + str(ts_high))
-            new_frame_ts.append(int(ts_high))
-  print("Done\n")
-  print("Save frame by frame\n")
-  adma.save_frame_by_frame(adma.video_file, new_frame_ts)
-  print("Done\n")
-  print("Save timestamps in timestamps.txt\n")
-  adma.write_ts_to_file(new_frame_ts,"timestamps")
-  adma.write_ts_to_file(ts_new, "imu_timestamps")
+    print("Get video frame timestamps\n")
+    frame_ts = adma.get_video_ts(ts_new)
+    print("Done!\n")
+
+    print("Find the nearest ts\n")
+    new_frame_ts = []
+    for counter, ts in enumerate(frame_ts):
+        nearest = adma.find_nearest_ts(ts_new, ts)
+        print("TS: " + str(ts))
+        print("NEAREST: " + str(nearest))
+        for count, ts_high in enumerate(ts_new):
+          if ts_high == nearest:
+              print("TS_HIGH: " + str(ts_high))
+              new_frame_ts.append(int(ts_high))
+    print("Done\n")
+    print("Save frame by frame\n")
+    adma.save_frame_by_frame(adma.video_file, new_frame_ts)
+    print("Done\n")
+  
+    print("Save timestamps in timestamps.txt\n")
+    adma.write_ts_to_file(new_frame_ts,"timestamps")
+    adma.write_ts_to_file(ts_new, "imu_timestamps")
       
 
   with open(str(adma.rootdir) + '/mav0/imu0/data.csv', 'w', newline='') as file:
@@ -193,7 +211,7 @@ def main():
     field = ["#timestamp [ns]","w_RS_S_x [rad s^-1]","w_RS_S_y [rad s^-1]","w_RS_S_z [rad s^-1]","a_RS_S_x [m s^-2]","a_RS_S_y [m s^-2]","a_RS_S_z [m s^-2]"]
     writer.writerow(field)
 
-    for count, ts in enumerate(ts_new):
+    for count, ts in enumerate(timestamps):
       field = [
               int(ts),
               "{:.18f}".format(float(rate_body_x[count])), 
@@ -204,6 +222,85 @@ def main():
               "{:.18f}".format(float(acc_body_z[count]))]
       writer.writerow(field)
 
+  values_accl = []
+  values_gyro = []
+  for count, ms in enumerate(timestamps):
+    obj_acc = {
+      "value": [
+        float(acc_body_x[count]),
+        float(acc_body_y[count]),
+        float(acc_body_z[count])],
+      "cts": float(cts[count])
+    }
+
+    values_accl.append(obj_acc)
+
+    obj_gyro = {
+      "value": [
+        float(rate_body_x[count]),
+        float(rate_body_y[count]),
+        float(rate_body_z[count])
+      ],
+      "cts": float(cts[count])
+    }
+
+    values_gyro.append(obj_gyro)
+
+  obj = {
+    "1": {
+      "streams": {
+        "ACCL": {
+          "samples": [
+            values_accl
+          ]
+        }
+      }
+    }
+  }
+
+  obj2 = {
+    "1": {
+      "streams": {
+        "GYRO": {
+          "samples": [
+            values_gyro
+          ]
+        }
+      }
+    }
+  }
+
+  with open(str(adma.rootdir) + '/mav0/imu0/data_accl.json', 'a') as json_file:
+    json.dump(obj, json_file, indent=4)
+  with open(str(adma.rootdir) + '/mav0/imu0/data_gyro.json', 'a') as json_file:
+    json.dump(obj2, json_file, indent=4)
+  
+  return 0
+  
+
+  # objects = []
+  # for count, ts in enumerate(timestamps):
+  #   obj = {
+  #   "ts": int(ts),
+  #   "acc_x": float(acc_body_x[count]),
+  #   "acc_y": float(acc_body_y[count]),
+  #   "acc_z": float(acc_body_z[count]),
+  #   "gyro_x": float(rate_body_x[count]),
+  #   "gyro_y": float(rate_body_y[count]),
+  #   "gyro_z": float(rate_body_z[count])
+  #   }
+  #   objects.append(obj)
+
+  #   # "ts": int(ts),
+  #   # "acc_x": "{:.18f}".format(float(acc_body_x[count])),
+  #   # "acc_y": "{:.18f}".format(float(acc_body_y[count])),
+  #   # "acc_z": "{:.18f}".format(float(acc_body_z[count])),
+  #   # "gyro_x": "{:.18f}".format(float(rate_body_x[count])),
+  #   # "gyro_y": "{:.18f}".format(float(rate_body_y[count])),
+  #   # "gyro_z": "{:.18f}".format(float(rate_body_z[count]))
+
+  # with open(str(adma.rootdir) + '/mav0/imu0/data.json', 'a') as json_file:
+  #   json.dump(objects, json_file, indent=4)
 
 
   

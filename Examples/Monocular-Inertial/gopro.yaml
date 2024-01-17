@@ -63,7 +63,7 @@ Camera.height: 1080 # 540
 
 # Camera frames per second 
 #Camera.fps: 30.0
-Camera.fps: 50
+Camera.fps: 50  # 50
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
@@ -81,11 +81,13 @@ Tbc: !!opencv-matrix
 
 
 # IMU noise -> use OpenICC (https://github.com/urbste/OpenImuCameraCalibrator)
-IMU.NoiseGyro: 0.0013 # rad/s^0.5 
-IMU.NoiseAcc: 0.017 # m/s^1.5
+# IMU.NoiseGyro: 0.0013 # rad/s^0.5 
+# IMU.NoiseAcc: 0.017 # m/s^1.5
+IMU.NoiseGyro: 0.000139 # rad/s^0.5 
+IMU.NoiseAcc: 0.016 # m/s^1.5
 IMU.GyroWalk: 5e-5 #100.04       #5e-5 # rad/s^1.5
 IMU.AccWalk: 0.0055 # m/s^2.5
-IMU.Frequency: 50
+IMU.Frequency: 200 #100
 
 
 #--------------------------------------------------------------------------------------------
@@ -106,7 +108,7 @@ ORBextractor.nLevels: 12
 # Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
 # You can lower these values if your images have low contrast			
 ORBextractor.iniThFAST: 20
-ORBextractor.minThFAST: 7
+ORBextractor.minThFAST: 5
 
 
 #--------------------------------------------------------------------------------------------
