@@ -826,36 +826,10 @@ namespace ORB_SLAM3
                     FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
                          vKeysCell,iniThFAST,true);
 
-                    /*if(bRight && j <= 13){
-                        FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                             vKeysCell,10,true);
-                    }
-                    else if(!bRight && j >= 16){
-                        FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                             vKeysCell,10,true);
-                    }
-                    else{
-                        FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                             vKeysCell,iniThFAST,true);
-                    }*/
-
-
                     if(vKeysCell.empty())
                     {
                         FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
                              vKeysCell,minThFAST,true);
-                        /*if(bRight && j <= 13){
-                            FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                                 vKeysCell,5,true);
-                        }
-                        else if(!bRight && j >= 16){
-                            FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                                 vKeysCell,5,true);
-                        }
-                        else{
-                            FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
-                                 vKeysCell,minThFAST,true);
-                        }*/
                     }
 
                     if(!vKeysCell.empty())
@@ -1083,7 +1057,7 @@ namespace ORB_SLAM3
             computeOrbDescriptor(keypoints[i], image, &pattern[0], descriptors.ptr((int)i));
     }
 
-    int ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPoint>& _keypoints,
+    int ORBextractor::operator()( InputArray _image, const Mat &_mask, vector<KeyPoint>& _keypoints,
                                   OutputArray _descriptors, std::vector<int> &vLappingArea)
     {
         //cout << "[ORBextractor]: Max Features: " << nfeatures << endl;
@@ -1099,6 +1073,27 @@ namespace ORB_SLAM3
         vector < vector<KeyPoint> > allKeypoints;
         ComputeKeyPointsOctTree(allKeypoints);
         //ComputeKeyPointsOld(allKeypoints);
+
+        for(int level = 0; level < nlevels; ++level) {
+            if(!_mask.empty()) {
+                vector<cv::KeyPoint> tmpkeypoints;
+                for(const auto& keypoint : allKeypoints[level]) {
+                    //cout << "==============================================" << endl;
+                    //cout << "Scale level: " << level << endl;
+                    //cout << "ScaleFactor: " << mvScaleFactor[level] << endl;
+                    //cout << "Point before rescaling: (" << keypoint.pt.x << "/" << keypoint.pt.y << ")" << endl;
+                    int scaledX = keypoint.pt.x * mvScaleFactor[level];
+                    int scaledY = keypoint.pt.y * mvScaleFactor[level];
+                    //cout << "Point after rescaling: (" << scaledX << "/" << scaledY << ")" << endl;
+                    int value = _mask.at<uint8_t>(scaledY, scaledX);
+                    //cout << "Value in mask: " << value << endl;
+                    if(value == 0) {
+                        tmpkeypoints.push_back(keypoint);
+                    }
+                }
+                allKeypoints[level] = tmpkeypoints;
+            }
+        }
 
         Mat descriptors;
 
