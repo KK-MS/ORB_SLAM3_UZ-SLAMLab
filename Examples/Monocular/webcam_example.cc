@@ -27,7 +27,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui.hpp>
-#include <System.h>
+#include "System.h"
 
 using namespace std;
 
@@ -85,36 +85,28 @@ int main(int argc, char **argv)
     int count = 0;
     int last_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
     cout << "LAST FRAME COUNT: " << last_frame << endl;
+
+
+    int width = 1920;
+    int height = 1080;
+    cv::Mat mask(height, width, CV_8UC1, cv::Scalar(0));
+
+    for (int r = 0; r < height; ++r) {
+        for (int c = width / 2; c < width; ++c) {
+            mask.at<uchar>(r, c) = 1;
+        }
+    }
+
     while (b_continue_session)
     {
         double timestamp_ms = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
         cap >> imCV;
         if(!imCV.empty()){
-        /*if (imCV.empty()){
-            break;
-        }*/
-        // cv::imshow("frame", imCV);
-        // cv::waitKey(0);
-        //cv::rotate(imCV, imCV, cv::ROTATE_90_CLOCKWISE);
-        //cv::Mat gray;
-        //cv::cvtColor(imCV, gray, cv::COLOR_BGR2GRAY);
-        imageScale = 1.0f;
-        // if (imageScale != 1.f)
-        // {
-        //     int width = imCV.cols * imageScale;
-        //     int height = imCV.rows * imageScale;
-        //     cv::resize(imCV, imCV, cv::Size(width, height));
-        // }
 
+        imageScale = 1.0f;
         // Pass the image to the SLAM system
-        SLAM.TrackMonocular(imCV, timestamp_ms);
-        
-        // if(count >= last_frame) {
-        //     break;
-        // }
-        // else {
-        //     count++;
-        // }
+        SLAM.TrackMonocular(imCV, timestamp_ms, mask);
+
         }
     }
 
