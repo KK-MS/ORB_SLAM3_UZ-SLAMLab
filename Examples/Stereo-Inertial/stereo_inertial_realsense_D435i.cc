@@ -24,6 +24,7 @@
 #include <chrono>
 #include <ctime>
 #include <sstream>
+#include <stdio.h>
 
 #include <condition_variable>
 
@@ -332,8 +333,13 @@ int main(int argc, char **argv) {
     double t_resize = 0.f;
     double t_track = 0.f;
 
+    char c;
     while (!SLAM.isShutDown())
     {
+        // c=getchar();
+        // if (c==27){
+        //   break;
+        // }
         std::vector<rs2_vector> vGyro;
         std::vector<double> vGyro_times;
         std::vector<rs2_vector> vAccel;
@@ -402,10 +408,10 @@ int main(int argc, char **argv) {
             std::chrono::monotonic_clock::time_point t_Start_Resize = std::chrono::monotonic_clock::now();
     #endif
 #endif
-            int width = im.cols * imageScale;
-            int height = im.rows * imageScale;
-            cv::resize(im, im, cv::Size(width, height));
-            cv::resize(imRight, imRight, cv::Size(width, height));
+            // int width = im.cols * imageScale;
+            // int height = im.rows * imageScale;
+            // cv::resize(im, im, cv::Size(width, height));
+            // cv::resize(imRight, imRight, cv::Size(width, height));
 
 #ifdef REGISTER_TIMES
     #ifdef COMPILEDWITHC11
@@ -443,6 +449,10 @@ int main(int argc, char **argv) {
         vImuMeas.clear();
     }
     cout << "System shutdown!\n";
+    SLAM.Shutdown();
+
+    //SLAM.SaveKeyFrameTrajectoryEuRoC();
+    //SLAM.SaveTrajectoryEuRoC();
 }
 
 rs2_vector interpolateMeasure(const double target_time,

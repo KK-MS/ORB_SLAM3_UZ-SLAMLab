@@ -41,6 +41,7 @@ bool b_continue_session;
 void exit_loop_handler(int s){
     cout << "Finishing session" << endl;
     b_continue_session = false;
+    exit(0);
 
 }
 
@@ -138,8 +139,8 @@ int main(int argc, char **argv) {
         if (sensor.supports(RS2_CAMERA_INFO_NAME)) {
             ++index;
             if (index == 1) {
-                sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, 1);
-                sensor.set_option(RS2_OPTION_AUTO_EXPOSURE_LIMIT,5000);
+                //sensor.set_option(RS2_OPTION_AUTO_EXPOSURE_LIMIT,5000);
+                //sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, 1);
                 sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 0); // switch off emitter
             }
             // std::cout << "  " << index << " : " << sensor.get_info(RS2_CAMERA_INFO_NAME) << std::endl;
@@ -189,8 +190,10 @@ int main(int argc, char **argv) {
     {
         std::unique_lock<std::mutex> lock(imu_mutex);
 
+        cout << "Before if statement" << endl;
         if(rs2::frameset fs = frame.as<rs2::frameset>())
         {
+            cout << "Inside if statement" << endl;
             count_im_buffer++;
 
             double new_timestamp_image = fs.get_timestamp()*1e-3;
@@ -314,12 +317,6 @@ int main(int argc, char **argv) {
             if(!image_ready)
                 cond_image_rec.wait(lk);
 
-#ifdef COMPILEDWITHC11
-            std::chrono::steady_clock::time_point time_Start_Process = std::chrono::steady_clock::now();
-#else
-            std::chrono::monotonic_clock::time_point time_Start_Process = std::chrono::monotonic_clock::now();
-#endif
-
             if(count_im_buffer>1)
                 cout << count_im_buffer -1 << " dropped frs\n";
             count_im_buffer = 0;
@@ -359,57 +356,24 @@ int main(int argc, char **argv) {
             ORB_SLAM3::IMU::Point lastPoint(vAccel[i].x, vAccel[i].y, vAccel[i].z,
                                   vGyro[i].x, vGyro[i].y, vGyro[i].z,
                                   vGyro_times[i]);
+            cout << "Last Point: " << vAccel[i].x << " " << vAccel[i].y << " " << vAccel[i].z << " " << vGyro[i].x << " " << vGyro[i].y << " " << vGyro[i].z << " " << vGyro_times[i] << endl;
             vImuMeas.push_back(lastPoint);
         }
 
         if(imageScale != 1.f)
         {
-#ifdef REGISTER_TIMES
-    #ifdef COMPILEDWITHC11
-            std::chrono::steady_clock::time_point t_Start_Resize = std::chrono::steady_clock::now();
-    #else
-            std::chrono::monotonic_clock::time_point t_Start_Resize = std::chrono::monotonic_clock::now();
-    #endif
-#endif
             int width = im.cols * imageScale;
             int height = im.rows * imageScale;
             cv::resize(im, im, cv::Size(width, height));
-#ifdef REGISTER_TIMES
-    #ifdef COMPILEDWITHC11
-            std::chrono::steady_clock::time_point t_End_Resize = std::chrono::steady_clock::now();
-    #else
-            std::chrono::monotonic_clock::time_point t_End_Resize = std::chrono::monotonic_clock::now();
-    #endif
-            t_resize = std::chrono::duration_cast<std::chrono::duration<double,std::milli> >(t_End_Resize - t_Start_Resize).count();
-            SLAM.InsertResizeTime(t_resize);
-#endif
-        }
 
-#ifdef REGISTER_TIMES
-    #ifdef COMPILEDWITHC11
-        std::chrono::steady_clock::time_point t_Start_Track = std::chrono::steady_clock::now();
-    #else
-        std::chrono::monotonic_clock::time_point t_Start_Track = std::chrono::monotonic_clock::now();
-    #endif
-#endif
         // Pass the image to the SLAM system
         SLAM.TrackMonocular(im, timestamp, vImuMeas);
-#ifdef REGISTER_TIMES
-    #ifdef COMPILEDWITHC11
-        std::chrono::steady_clock::time_point t_End_Track = std::chrono::steady_clock::now();
-    #else
-        std::chrono::monotonic_clock::time_point t_End_Track = std::chrono::monotonic_clock::now();
-    #endif
-        t_track = t_resize + std::chrono::duration_cast<std::chrono::duration<double,std::milli> >(t_End_Track - t_Start_Track).count();
-        SLAM.InsertTrackTime(t_track);
-#endif
-
-
 
         // Clear the previous IMU measurements to load the new ones
         vImuMeas.clear();
     }
     cout << "System shutdown!\n";
+}
 }
 
 rs2_vector interpolateMeasure(const double target_time,
