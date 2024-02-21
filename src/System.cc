@@ -865,13 +865,6 @@ void System::SaveTrajectoryEuRoC(const string &filename, Map* pMap)
             Eigen::Quaternionf q = Twb.unit_quaternion();
             Eigen::Vector3f twb = Twb.translation();
             f << setprecision(6) << 1e9*(*lT) << " " <<  setprecision(9) << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
-<<<<<<< HEAD
-=======
-            cout << "mTimestamp: " << 1e9*pKF->mTimeStamp << endl;
-            cout << "twb: " << twb(0) << " " << twb(1) << " " << twb(2) << endl;
-            cout << "q.x(): " << q.x() << " q.y(): " << q.y() << " q.z(): " << q.z() << endl;
-            cout << "q.w(): " << q.w() << endl;
->>>>>>> Add implementation of image masking
         }
         else
         {
