@@ -865,10 +865,6 @@ void System::SaveTrajectoryEuRoC(const string &filename, Map* pMap)
             Eigen::Quaternionf q = Twb.unit_quaternion();
             Eigen::Vector3f twb = Twb.translation();
             f << setprecision(6) << 1e9*(*lT) << " " <<  setprecision(9) << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
-            cout << "mTimestamp: " << 1e9*pKF->mTimeStamp << endl;
-            cout << "twb: " << twb(0) << twb(1) << twb(2) << endl;
-            cout << "q.x(): " << q.x() << "q.y()" << q.y() << "q.z()" << q.z() << endl;
-            cout << "q.w(): " << q.w() << endl;
         }
         else
         {
@@ -876,10 +872,6 @@ void System::SaveTrajectoryEuRoC(const string &filename, Map* pMap)
             Eigen::Quaternionf q = Twc.unit_quaternion();
             Eigen::Vector3f twc = Twc.translation();
             f << setprecision(6) << 1e9*(*lT) << " " <<  setprecision(9) << twc(0) << " " << twc(1) << " " << twc(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
-            cout << "mTimestamp: " << 1e9*pKF->mTimeStamp << endl;
-            cout << "twb: " << twc(0) << twc(1) << twc(2) << endl;
-            cout << "q.x(): " << q.x() << "q.y()" << q.y() << "q.z()" << q.z() << endl;
-            cout << "q.w(): " << q.w() << endl;
         }
 
         // cout << "5" << endl;
@@ -935,10 +927,6 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string &filename)
             Eigen::Quaternionf q = Twb.unit_quaternion();
             Eigen::Vector3f twb = Twb.translation();
             f << setprecision(6) << 1e9*pKF->mTimeStamp  << " " <<  setprecision(9) << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
-            cout << "mTimestamp: " << 1e9*pKF->mTimeStamp << endl;
-            cout << "twb: " << twb(0) << twb(1) << twb(2) << endl;
-            cout << "q.x(): " << q.x() << "q.y()" << q.y() << "q.z()" << q.z() << endl;
-            cout << "q.w(): " << q.w() << endl;
         }
         else
         {
@@ -946,10 +934,6 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string &filename)
             Eigen::Quaternionf q = Twc.unit_quaternion();
             Eigen::Vector3f t = Twc.translation();
             f << setprecision(6) << 1e9*pKF->mTimeStamp << " " <<  setprecision(9) << t(0) << " " << t(1) << " " << t(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
-            cout << "mTimestamp: " << 1e9*pKF->mTimeStamp << endl;
-            cout << "twb: " << t(0) << t(1) << t(2) << endl;
-            cout << "q.x(): " << q.x() << "q.y()" << q.y() << "q.z()" << q.z() << endl;
-            cout << "q.w(): " << q.w() << endl;
         }
     }
     f.close();
@@ -980,10 +964,6 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string &filename, Map* pMap)
             Eigen::Quaternionf q = Twb.unit_quaternion();
             Eigen::Vector3f twb = Twb.translation();
             f << setprecision(6) << 1e9*pKF->mTimeStamp  << " " <<  setprecision(9) << twb(0) << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
-            cout << "mTimestamp: " << 1e9*pKF->mTimeStamp << endl;
-            cout << "twb: " << twb(0) << twb(1) << twb(2) << endl;
-            cout << "q.x(): " << q.x() << "q.y()" << q.y() << "q.z()" << q.z() << endl;
-            cout << "q.w(): " << q.w() << endl;
 
         }
         else
@@ -992,10 +972,6 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string &filename, Map* pMap)
             Eigen::Quaternionf q = Twc.unit_quaternion();
             Eigen::Vector3f t = Twc.translation();
             f << setprecision(6) << 1e9*pKF->mTimeStamp << " " <<  setprecision(9) << t(0) << " " << t(1) << " " << t(2) << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
-            cout << "mTimestamp: " << 1e9*pKF->mTimeStamp << endl;
-            cout << "twb: " << t(0) << t(1) << t(2) << endl;
-            cout << "q.x(): " << q.x() << "q.y()" << q.y() << "q.z()" << q.z() << endl;
-            cout << "q.w(): " << q.w() << endl;
         }
     }
     f.close();
