@@ -69,7 +69,7 @@ public:
     bool ParseIMUParamFile(cv::FileStorage &fSettings);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
-    Sophus::SE3f GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp, string filename, const cv::Mat &mask);
+    Sophus::SE3f GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp, string filename, const cv::Mat &mask_left, const cv::Mat &mask_right);
     Sophus::SE3f GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp, string filename, const cv::Mat &mask);
     Sophus::SE3f GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename, const cv::Mat &mask);
 
