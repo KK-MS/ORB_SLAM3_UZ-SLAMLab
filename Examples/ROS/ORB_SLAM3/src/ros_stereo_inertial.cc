@@ -196,6 +196,7 @@ cv::Mat ImageGrabber::GetImage(const sensor_msgs::ImageConstPtr &img_msg)
 void ImageGrabber::SyncWithImu()
 {
   const double maxTimeDiff = 0.01;
+  int count = 0;
   while(1)
   {
     cv::Mat imLeft, imRight;
@@ -266,8 +267,11 @@ void ImageGrabber::SyncWithImu()
         cv::remap(imLeft,imLeft,M1l,M2l,cv::INTER_LINEAR);
         cv::remap(imRight,imRight,M1r,M2r,cv::INTER_LINEAR);
       }
-
-      mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+      string f_mask_left = "~/Schreibtisch/scripts_od/masks_left/" + to_string(count) + ".jpg";
+      string f_mask_right = "~/Schreibtisch/scripts_od/masks_right/" + to_string(count) + ".jpg";
+      cv::Mat mask_left = imread(f_mask_left);
+      cv::Mat mask_right = imread(f_mask_right);
+      mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas, mask_left, mask_right);
 
       std::chrono::milliseconds tSleep(1);
       std::this_thread::sleep_for(tSleep);
@@ -277,7 +281,6 @@ void ImageGrabber::SyncWithImu()
 
 void ImuGrabber::GrabImu(const sensor_msgs::ImuConstPtr &imu_msg)
 {
-  cout << "IMU MSG: " << &imu_msg << endl;
   mBufMutex.lock();
   imuBuf.push(imu_msg);
   mBufMutex.unlock();
